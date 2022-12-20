@@ -1,38 +1,32 @@
 import Player from '@vimeo/player';
+const throttle = require('lodash.throttle');
 
 const iframe = document.querySelector('#vimeo-player');
 const player = new Player(iframe);
 const LOCALSTORAGE_KEY = "videoplayer-current-time";
-let currentTimePlay = {};
 
-player.on('play', function(){
-    player.setCurrentTime(0).then(function(seconds) {
-        console.log('played the video!');
-        data = localStorage.getItem(LOCALSTORAGE_KEY);
-        if (data) {
-            data = JSON.parse(data);
-            Object.entries(data).forEach(([name, value]) => {
-                currentTimePlay[name] = value;
-                console.log (currentTimePlay)
-                }
-            )
-        }
-    });
-}) 
-
+player.on("play", onPlay);
+player.on("timeupdate", throttle(onSetTime, 1000));
 player.getVideoTitle().then(function(title) {
     console.log('title:', title);
 });
 
-player.on("timeupdate", onPlay);
-
-function onPlay(iframe){
+function onPlay(){
+    player.setCurrentTime(parseFloat(localStorage.getItem(LOCALSTORAGE_KEY))).then(function(seconds) {
     console.log('played the video!');
-    currentTimePlay.seconds = iframe.seconds;
-    currentTimePlay.duration = iframe.duration;
-    currentTimePlay.percent = iframe.percent;
-    localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(currentTimePlay));
-    console.log(currentTimePlay);
+}).catch(function(error) {
+    switch (error.name) {
+        case 'RangeError':
+            // the time was less than 0 or greater than the video’s duration
+            break;
+        default:
+            // some other error occurred
+            break;
+    }
+});
 };
 
-
+function onSetTime(player){
+    currentTime = player.seconds;
+    localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(currentTime));
+};
