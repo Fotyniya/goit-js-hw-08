@@ -27,6 +27,6 @@ function onPlay(){
 };
 
 function onSetTime(player){
-    currentTime = player.seconds;
+    const currentTime = player.seconds;
     localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(currentTime));
 };
